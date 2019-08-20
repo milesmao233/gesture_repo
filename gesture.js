@@ -3,9 +3,11 @@
 // panstart 开始按住移动，startX, startY初始位置
 // pan 移动中，dx,dy 距离startX,startY
 // panend 按住移动结束， dx,dy 距离startX,startY
+// flick 快速滑动
 
 class Gesture {
-    constructor() {
+    constructor(main) {
+        this.container = main;
         this.contexts = Object.create(null);
         this.mouseSymbol = Symbol("mouse");
         this._setup();
@@ -41,10 +43,18 @@ class Gesture {
             context.isTap = false;
 
             if (context.isPan == false) {
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    context.isVertical = false;
+                    context.isHorizontal = true;
+                } else {
+                    context.isVertical = true;
+                    context.isHorizontal = false;
+                }
+
                 let e = new Event("panstart");
                 e.startX = context.startX;
                 e.startY = context.startY;
-                main.dispatchEvent(e);
+                this.container.dispatchEvent(e);
                 context.isPan = true;
             }
         }
@@ -53,7 +63,9 @@ class Gesture {
             let e = new Event("pan");
             e.dx = dx;
             e.dy = dy;
-            main.dispatchEvent(e);
+            e.isHorizontal = context.isHorizontal;
+            e.isVertical = context.isVertical;
+            this.container.dispatchEvent(e);
         }
     }
 
@@ -61,23 +73,37 @@ class Gesture {
         // console.log("end", point.clientX, point.clientY);
         if (context.isTap) {
             let e = new Event("tap");
-            main.dispatchEvent(e);
+            this.container.dispatchEvent(e);
+        }
+        let dx = point.clientX - context.startX,
+            dy = point.clientY - context.startY;
+
+        let v = Math.sqrt(dx * dx + dy * dy) / (Date.now() - context.startTime);
+        //console.log(v);
+        if (context.isPan && v > 0.3) {
+            context.isFlick = true;
+            let e = new Event("flick");
+            e.dx = dx;
+            e.dy = dy;
+            this.container.dispatchEvent(e);
+        } else {
+            context.isFlick = false;
         }
         if (context.isPan) {
             let e = new Event("panend");
-            let dx = point.clientX - context.startX,
-                dy = point.clientY - context.startY;
-
             e.dx = dx;
             e.dy = dy;
-            main.dispatchEvent(e);
+            e.isFlick = context.isFlick;
+            e.isHorizontal = context.isHorizontal;
+            e.isVertical = context.isVertical;
+            this.container.dispatchEvent(e);
         }
     }
 
     _cancel(point, context) {
         if (context.isPan) {
             let e = new Event("pancancel");
-            main.dispatchEvent(e);
+            this.container.dispatchEvent(e);
         }
     }
 
@@ -130,7 +156,7 @@ class Gesture {
 }
 
 const enableGesture = main => {
-    const gesture = new Gesture();
+    const gesture = new Gesture(main);
     // mouse事件
     main.addEventListener("mousedown", gesture.mousedown);
 
