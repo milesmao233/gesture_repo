@@ -4,6 +4,7 @@
 // pan 移动中，dx,dy 距离startX,startY
 // panend 按住移动结束， dx,dy 距离startX,startY
 // flick 快速滑动
+// press 手按，经过一段时间触发
 
 class Gesture {
     constructor(main) {
@@ -32,6 +33,15 @@ class Gesture {
 
         context.isTap = true;
         context.isPan = false;
+
+        context.isPress = false;
+        context.pressHandler = setTimeout(() => {
+            context.isPress = true;
+            context.isTap = false;
+            let e = new Event("pressstart");
+            this.container.dispatchEvent(e);
+            context.pressHandler = null;
+        }, 500);
     }
 
     _move(point, context) {
@@ -40,6 +50,15 @@ class Gesture {
             dy = point.clientY - context.startY;
 
         if (dx * dx + dy * dy > 100) {
+            if (context.pressHandler !== null) {
+                clearTimeout(context.pressHandler);
+                context.pressHandler = null;
+                context.isPress = false;
+            } else if (context.isPress) {
+                context.isPress = false;
+                let e = new Event("presscancel");
+                main.dispatchEvent(e);
+            }
             context.isTap = false;
 
             if (context.isPan == false) {
@@ -71,6 +90,13 @@ class Gesture {
 
     _end(point, context) {
         // console.log("end", point.clientX, point.clientY);
+        if (context.pressHandler !== null) {
+            clearTimeout(context.pressHandler);
+        }
+        if (context.isPress) {
+            let e = new Event("pressend");
+            main.dispatchEvent(e);
+        }
         if (context.isTap) {
             let e = new Event("tap");
             this.container.dispatchEvent(e);

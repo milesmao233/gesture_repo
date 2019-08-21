@@ -36,6 +36,18 @@
                     // console.log("cancel");
                     main.style.transform = `translate(${x}px, ${y}px)`;
                 });
+
+                main.addEventListener("pressstart", event => {
+                    console.log("pressstart");
+                });
+
+                main.addEventListener("pressend", event => {
+                    console.log("pressend");
+                });
+
+                main.addEventListener("presscancel", event => {
+                    console.log("presscancel");
+                });
             };
 
             __main();
