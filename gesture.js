@@ -57,7 +57,7 @@ class Gesture {
             } else if (context.isPress) {
                 context.isPress = false;
                 let e = new Event("presscancel");
-                main.dispatchEvent(e);
+                this._container.dispatchEvent(e);
             }
             context.isTap = false;
 
@@ -95,7 +95,7 @@ class Gesture {
         }
         if (context.isPress) {
             let e = new Event("pressend");
-            main.dispatchEvent(e);
+            this._container.dispatchEvent(e);
         }
         if (context.isTap) {
             let e = new Event("tap");
@@ -129,7 +129,16 @@ class Gesture {
     _cancel(point, context) {
         if (context.isPan) {
             let e = new Event("pancancel");
-            this.container.dispatchEvent(e);
+            this._container.dispatchEvent(e);
+        }
+        if (context.isPress) {
+            let e = new Event("presscancel");
+            this._container.dispatchEvent(e);
+        }
+        if (context.pressHandler !== null) {
+            let e = new Event("pancancel");
+            this._container.dispatchEvent(e);
+            clearTimeout(context.pressHandler);
         }
     }
 
