@@ -60,7 +60,7 @@ class Gesture {
             if (context.pressHandler !== null) {
                 // 是在press了,但延迟时间还没有到的时候，移动了情况
                 clearTimeout(context.pressHandler);
-                // context.pressHandler = null;
+                context.pressHandler = null;
                 context.isPress = false;
             } else if (context.isPress) {
                 // 是在press了,但延迟时间到的时候，移动了情况
